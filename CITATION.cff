@@ -17,6 +17,14 @@ keywords:
   -  remote sensing
   -  ice displacement
 authors:
+  - given-names: "Luis"
+    family-names: "Lopez"
+    orcid: "https://orcid.org/0000-0003-4896-3263"
+    affiliation: >-
+      National Snow and Ice Data Center,
+      Cooperative Institute for Research In Environmental Sciences,
+      University of Colorado,
+      Boulder, CO 80309, USA
   - given-names: Joseph
     name-particle: H
     family-names: Kennedy
@@ -26,11 +34,3 @@ authors:
       Geophysical Institute,
       University of Alaska Fairbanks,
       Fairbanks, AK 99775, USA
-  - given-names: "Luis"
-    family-names: "Lopez"
-    orcid: "https://orcid.org/0000-0003-4896-3263"
-    affiliation: >-
-      National Snow and Ice Data Center,
-      Cooperative Institute for Research In Environmental Sciences,
-      University of Colorado,
-      Boulder, CO 80309, USA
