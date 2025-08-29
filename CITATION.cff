@@ -1,0 +1,36 @@
+cff-version: 1.2.0
+title: A HyP3 plugin for feature tracking processing with AutoRIFT
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+license: Apache-2.0
+keywords:
+  -  feature tracking
+  -  optical
+  -  radar
+  -  satellite imagery
+  -  surface displacement
+  -  glacier velocity
+  -  earthquake displacement
+  -  landslide
+  -  remote sensing
+  -  ice displacement
+authors:
+  - given-names: Joseph
+    name-particle: H
+    family-names: Kennedy
+    orcid: 'https://orcid.org/0000-0002-9348-693X'
+    affiliation: >-
+      Alaska Satellite Facility,
+      Geophysical Institute,
+      University of Alaska Fairbanks,
+      Fairbanks, AK 99775, USA
+  - given-names: "Luis"
+    family-names: "Lopez"
+    orcid: "https://orcid.org/0000-0003-4896-3263"
+    affiliation: >-
+      National Snow and Ice Data Center,
+      Cooperative Institute for Research In Environmental Sciences,
+      University of Colorado,
+      Boulder, CO 80309, USA
