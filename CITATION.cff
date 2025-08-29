@@ -17,9 +17,9 @@ keywords:
   -  remote sensing
   -  ice displacement
 authors:
-  - given-names: "Luis"
-    family-names: "Lopez"
-    orcid: "https://orcid.org/0000-0003-4896-3263"
+  - given-names: Luis
+    family-names: Lopez
+    orcid: 'https://orcid.org/0000-0003-4896-3263'
     affiliation: >-
       National Snow and Ice Data Center,
       Cooperative Institute for Research In Environmental Sciences,
@@ -34,3 +34,10 @@ authors:
       Geophysical Institute,
       University of Alaska Fairbanks,
       Fairbanks, AK 99775, USA
+  - given-names: Alex
+    family-names: Gardner
+    orcid: 'https://orcid.org/0000-0002-8394-8889'
+    affiliation: >-
+      Jet Propulsion Laboratory,
+      California Institute of Technology,
+      Pasadena, CA 91109, USA
