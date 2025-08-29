@@ -1,10 +1,10 @@
 cff-version: 1.2.0
-title: A HyP3 plugin for feature tracking processing with AutoRIFT
+title: A HyP3 plugin for generating ITS_LIVE velocity scene metadata.
 message: >-
   If you use this software, please cite it using the
   metadata from this file.
 type: software
-license: Apache-2.0
+license: BSD-3-Clause
 keywords:
   -  feature tracking
   -  optical
