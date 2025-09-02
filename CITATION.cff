@@ -34,9 +34,9 @@ authors:
       Geophysical Institute,
       University of Alaska Fairbanks,
       Fairbanks, AK 99775, USA
-  - given-names: Masha
+  - given-names: Maria
     family-names: Liukis
-    # TODO: orcid: 'https://orcid.org/'
+    orcid: 'https://orcid.org/0009-0009-5445-4917'
     affiliation: >-
       Jet Propulsion Laboratory,
       California Institute of Technology,
