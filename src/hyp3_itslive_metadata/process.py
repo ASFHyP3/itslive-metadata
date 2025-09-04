@@ -1,41 +1,30 @@
 """itslive-metadata processing."""
 
 import logging
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 
-import s3fs
 from cryoforge import generate_itslive_metadata, save_metadata
 
 
 log = logging.getLogger(__name__)
 
 
-def process_itslive_metadata(bucket: str = '', prefix: str = '') -> list[Path]:
+def process_itslive_metadata(granule_uri: str) -> list[Path]:
     """Generates ITS_LIVE granule metadata files from a source S3 bucket and prefix.
 
     Args:
-        bucket: S3 bucket.
-        prefix: S3 prefix for the granule.
-        stac_output: S3 path for the STAC item.
+        granule_uri: URI to the granule or folder (s3://<bucket>/<prefix>) for the granule.
 
     Outputs:
         str: S3 path of the generated STAC item.
     """
-    s3_fs = s3fs.S3FileSystem(anon=False)
-    bucket_prefix = str(PurePosixPath(bucket) / prefix)
-    if not bucket_prefix.endswith('/'):
-        bucket_prefix += '/'
-    granules = s3_fs.glob(f'{bucket_prefix}*.nc')  # should only be one
-    granule = f's3://{granules[0]}' if granules else None
-    if not granule:
-        raise ValueError(f'No granules found in {bucket_prefix}')
-
-    log.info(f'Processing itslive metadata for granule: {granule}')
+    log.info(f'Processing itslive metadata for granule: {granule_uri}')
     metadata = generate_itslive_metadata(
-        url=granule,
+        url=granule_uri,
         store=None,  # Store is for Obstore
     )
-    # saves the stac item, the nsidc
+
+    # saves the stac item and the NSIDC spatial+premet metadata files
     output_path = Path('./output')
     output_path.mkdir(parents=True, exist_ok=True)
     save_metadata(metadata, './output')
