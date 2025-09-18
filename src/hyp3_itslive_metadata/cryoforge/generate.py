@@ -381,12 +381,29 @@ def create_stac_item(ds, geom, url):
     scene_1_id = ds["img_pair_info"].id_img1
     scene_2_id = ds["img_pair_info"].id_img2
     version = ITS_LIVE_DATA_VERSION
-    path_scene_1 = int(ds["img_pair_info"].attrs.get("path_img1", 0))
-    row_scene_1 = int(ds["img_pair_info"].attrs.get("row_img1", 0))
-    path_scene_2 = int(ds["img_pair_info"].attrs.get("path_img2", 0))
-    row_scene_2 = int(ds["img_pair_info"].attrs.get("row_img2", 0))
-    scene_1_path_row = f"{path_scene_1}/{row_scene_1}" if path_scene_1 != 0 else "N/A"
-    scene_2_path_row = f"{path_scene_2}/{row_scene_2}" if path_scene_2 != 0 else "N/A"
+
+    scene_1_frame = 'N/A'
+    scene_2_frame = 'N/A'
+
+    if mission.startswith('L'):
+        scene_1_frame = scene_1_id.split('_')[2]
+        scene_2_frame = scene_2_id.split('_')[2]
+    elif mission.startswith('S1'):
+        scene_1_frame = ds['img_pair_info']['scene_1_frame']
+        scene_2_frame = ds['img_pair_info']['scene_2_frame']
+    elif mission.startswith('S2'):
+        scene_1_frame = scene_1_id.split('_')[5]
+        scene_2_frame = scene_2_id.split('_')[5]
+    elif mission.startswith('N'):
+        scene_1_split = scene_1_id.split('_')
+        scene_2_split = scene_1_id.split('_')
+        # CYL_REL_FRM
+        # CYL - Orbit cycle
+        # REL - Relativate orbit track within cycle
+        # FRM - Frame number within orbit track
+        scene_1_frame = f'{scene_1_split[4]}_{scene_1_split[5]}_{scene_1_split[7]}'
+        scene_2_frame = f'{scene_2_split[4]}_{scene_2_split[5]}_{scene_2_split[7]}'
+
     date_created =  pd.to_datetime(ds.attrs.get("date_created", "")).tz_localize(
         "UTC"
     ).isoformat().replace("+00:00", "Z")
@@ -424,8 +441,8 @@ def create_stac_item(ds, geom, url):
             "platform": mission,
             "scene_1_id": scene_1_id,
             "scene_2_id": scene_2_id,
-            "scene_1_path_row": scene_1_path_row,
-            "scene_2_path_row": scene_2_path_row,
+            "scene_1_frame": scene_1_frame,
+            "scene_2_frame": scene_2_frame,
             "sat:orbit_state": sat_orbit_direction,
             "start_datetime": str(start_date),
             "end_datetime": str(end_date),
@@ -483,22 +500,18 @@ def generate_itslive_metadata(url: str, store:Any = None, with_kerchunk: bool=Fa
     if original_ds is None:
         raise ValueError(f"Could not open {url}")
 
-    original_ds.coords["time"] = pd.to_datetime(
-        original_ds["img_pair_info"].date_center
-    )
-    ds = original_ds.expand_dims(dim="time", axis=0)
-    geom = get_geom(ds, precision=4, projection=4326)
+    geom = get_geom(original_ds, precision=4, projection=4326)
     if geom is None:
         raise ValueError(f"Could not extract geometry from {url}")
     geom["url"] = url
-    item = create_stac_item(ds, geom, url)
+    item = create_stac_item(original_ds, geom, url)
     # item.validate() # <- will break because the schema is wrong for the collection property.
-    nsidc_meta = generate_nsidc_metadata_files(ds, item.id, item.properties["version"])
+    nsidc_meta = generate_nsidc_metadata_files(original_ds, item.id, item.properties["version"])
     nsidc_spatial = "\n".join([
         f"{round(coord[0], 2)}\t{round(coord[1], 2)}" for coord in geom["corners"]
     ])
     return {
-        "ds": ds,
+        "ds": original_ds,
         "url": url,
         "stac": item,
         "kerchunk": kerchunks,
