@@ -396,7 +396,7 @@ def create_stac_item(ds, geom, url):
         scene_2_frame = scene_2_id.split('_')[5]
     elif mission.startswith('N'):
         scene_1_split = scene_1_id.split('_')
-        scene_2_split = scene_1_id.split('_')
+        scene_2_split = scene_2_id.split('_')
         # CYL_REL_FRM
         # CYL - Orbit cycle
         # REL - Relativate orbit track within cycle
