@@ -493,24 +493,24 @@ def generate_itslive_metadata(url: str, store:Any = None, with_kerchunk: bool=Fa
         store (Any, optional): Optional store for async reading. Defaults to None.
     """
     if store:
-        original_ds, kerchunks = open_async_netcdf(url, store)
+        ds, kerchunks = open_async_netcdf(url, store)
     else:
-        original_ds, kerchunks = open_netcdf(url, with_kerchunk=with_kerchunk)
-    if original_ds is None:
+        ds, kerchunks = open_netcdf(url, with_kerchunk=with_kerchunk)
+    if ds is None:
         raise ValueError(f"Could not open {url}")
 
-    geom = get_geom(original_ds, precision=4, projection=4326)
+    geom = get_geom(ds, precision=4, projection=4326)
     if geom is None:
         raise ValueError(f"Could not extract geometry from {url}")
     geom["url"] = url
-    item = create_stac_item(original_ds, geom, url)
+    item = create_stac_item(ds, geom, url)
     # item.validate() # <- will break because the schema is wrong for the collection property.
-    nsidc_meta = generate_nsidc_metadata_files(original_ds, item.id, item.properties["version"])
+    nsidc_meta = generate_nsidc_metadata_files(ds, item.id, item.properties["version"])
     nsidc_spatial = "\n".join([
         f"{round(coord[0], 2)}\t{round(coord[1], 2)}" for coord in geom["corners"]
     ])
     return {
-        "ds": original_ds,
+        "ds": ds,
         "url": url,
         "stac": item,
         "kerchunk": kerchunks,
