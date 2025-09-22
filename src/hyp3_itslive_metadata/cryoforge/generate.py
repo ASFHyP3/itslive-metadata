@@ -397,12 +397,11 @@ def create_stac_item(ds, geom, url):
         scene_1_frame = scene_1_split[5]
         scene_2_frame = scene_2_split[5]
     elif mission.startswith('N'):
-        # CYL_REL_FRM
-        # CYL - Orbit cycle
+        # REL_FRM
         # REL - Relativate orbit track within cycle
         # FRM - Frame number within orbit track
-        scene_1_frame = f'{scene_1_split[4]}_{scene_1_split[5]}_{scene_1_split[7]}'
-        scene_2_frame = f'{scene_2_split[4]}_{scene_2_split[5]}_{scene_2_split[7]}'
+        scene_1_frame = f'{scene_1_split[5]}_{scene_1_split[7]}'
+        scene_2_frame = f'{scene_2_split[5]}_{scene_2_split[7]}'
 
     date_created =  pd.to_datetime(ds.attrs.get("date_created", "")).tz_localize(
         "UTC"
