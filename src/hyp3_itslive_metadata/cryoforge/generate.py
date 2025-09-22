@@ -385,18 +385,18 @@ def create_stac_item(ds, geom, url):
     scene_1_frame = 'N/A'
     scene_2_frame = 'N/A'
 
+    scene_1_split = scene_1_id.split('_')
+    scene_2_split = scene_1_id.split('_')
     if mission.startswith('L'):
-        scene_1_frame = scene_1_id.split('_')[2]
-        scene_2_frame = scene_2_id.split('_')[2]
+        scene_1_frame = scene_1_split[2]
+        scene_2_frame = scene_2_split[2]
     elif mission.startswith('S1'):
         scene_1_frame = ds['img_pair_info']['scene_1_frame']
         scene_2_frame = ds['img_pair_info']['scene_2_frame']
     elif mission.startswith('S2'):
-        scene_1_frame = scene_1_id.split('_')[5]
-        scene_2_frame = scene_2_id.split('_')[5]
+        scene_1_frame = scene_1_split[5]
+        scene_2_frame = scene_2_split[5]
     elif mission.startswith('N'):
-        scene_1_split = scene_1_id.split('_')
-        scene_2_split = scene_2_id.split('_')
         # CYL_REL_FRM
         # CYL - Orbit cycle
         # REL - Relativate orbit track within cycle
