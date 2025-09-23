@@ -18,6 +18,7 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 - Upgraded to cryoforge v0.4.0, which now provides scene_1_frame and scene_2_frame stac item properties.
+- STAC item JSONs will be grouped by the same granule prefix within `--publish-bucket` and `--publish-prefix`.
 
 ## [0.4.0]
 

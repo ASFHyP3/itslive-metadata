@@ -70,12 +70,12 @@ def main() -> None:
             upload_file_to_s3(file, args.bucket, args.bucket_prefix)
 
     if args.publish_bucket:
+        granule_prefix = str(Path(urlparse(args.granule_uri).path).parent).lstrip('/')
         for file in metadata_files:
             if '.stac.json' in file.name:
-                logging.info(f'Publishing STAC JSON to: s3://{args.publish_bucket}/{args.publish_prefix}/{file.name}')
-                upload_file_to_s3_with_publish_access_keys(file, bucket=args.publish_bucket, prefix=args.publish_prefix)
+                logging.info(f'Publishing STAC JSON to: s3://{args.publish_bucket}/{args.publish_prefix}/{granule_prefix}/{file.name}')
+                upload_file_to_s3_with_publish_access_keys(file, bucket=args.publish_bucket, prefix=f'{args.publish_prefix}/{granule_prefix}')
             else:
-                granule_prefix = str(Path(urlparse(args.granule_uri).path).parent).lstrip('/')
                 logging.info(f'Publishing {file.suffix} to: s3://{args.publish_bucket}/{granule_prefix}/{file.name}')
                 upload_file_to_s3_with_publish_access_keys(file, bucket=args.publish_bucket, prefix=granule_prefix)
 
