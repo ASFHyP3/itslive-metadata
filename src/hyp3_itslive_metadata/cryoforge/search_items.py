@@ -7,7 +7,7 @@ import json
 
 import logging
 
-from cryoforge.tooling import serverless_search
+from hyp3_itslive_metadata.cryoforge.tooling import serverless_search
 
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -44,7 +44,7 @@ def search_stac(stac_catalog, args: dict  = {}):
         "max_items": max_items
     }
 
-    # TODO: add more filters and flexibility 
+    # TODO: add more filters and flexibility
     if percent_valid_pixels is not None:
         search_kwargs["filter"] = {
             "op": ">=", "args": [{"property": "percent_valid_pixels"}, percent_valid_pixels]
@@ -52,7 +52,7 @@ def search_stac(stac_catalog, args: dict  = {}):
         search_kwargs["filter_lang"] = "cql2-json"
 
     search = catalog.search(**search_kwargs)
-    
+
     hrefs = []
     for item in search.items():
         for asset in item.assets.values():
@@ -66,7 +66,7 @@ def search_duckstac(catalog: str = "s3://its-live-data/test-space/stac/geoparque
     filters = [
         {"op": ">=", "args": [{"property": "percent_valid_pixels"}, args.percent_valid_pixels]},
         {'op': '=', 'args': [{'property': 'proj:code'}, args.epsg]} if args.epsg else {},
-    ] 
+    ]
     if args.geojson:
         try:
             with open(args.geojson, 'r') as f:
@@ -105,7 +105,7 @@ def search_duckstac(catalog: str = "s3://its-live-data/test-space/stac/geoparque
             partition_type = "h3",
             resolution = 2,
             overlap = "bbox_overlap")
- 
+
     return results
 
 def search_rustac(catalog: str = "s3://its-live-data/test-space/stac/geoparquet/latlon", args: dict = {}):

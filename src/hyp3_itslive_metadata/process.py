@@ -3,7 +3,7 @@
 import logging
 from pathlib import Path
 
-from cryoforge import generate_itslive_metadata, save_metadata
+from hyp3_itslive_metadata.cryoforge import generate_itslive_metadata, save_metadata
 
 
 log = logging.getLogger(__name__)
