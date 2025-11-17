@@ -1,27 +1,25 @@
 import fnmatch
 import gc
+import json
 import logging
+import math
+import os
 import re
 import urllib
+from typing import List
 from urllib.parse import urlparse
 
 import boto3
 import dask
-import s3fs
+import duckdb
 import h3
-import math
-import os
-import json
-from shapely.geometry import shape, box
-
 import psutil
 import requests
+import rustac
+import s3fs
 from botocore import UNSIGNED
 from botocore.client import Config
-import rustac
-import duckdb
-
-from typing import List
+from shapely.geometry import shape, box
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -42,30 +40,30 @@ s3_fs= s3fs.S3FileSystem(anon=True, default_fill_cache=False, skip_instance_cach
 def trim_memory() -> int:
     """
     Efficiently trim memory in a Dask worker context.
-    
+
     Returns:
         int: Approximate number of objects collected
     """
     # Force garbage collection
     collected = gc.collect()
-    
+
     # Attempt to release memory back to the system
     try:
         # Dask-specific memory management
         dask.distributed.worker.logger.debug("Attempting memory trim")
-        
+
         # Release worker local memory if using distributed
         dask.distributed.worker.memory_limit = None
     except Exception:
         pass
-    
+
     # Additional system-level memory management
     try:
         # Force Python to return memory to the system
         psutil.Process().memory_maps(grouped=True)
     except Exception:
         pass
-    
+
     return collected
 
 
@@ -87,19 +85,19 @@ def post_or_put(url: str, data: dict):
 def list_s3_objects(path, pattern='*', batch_size=5000):
     """
     List S3 objects with precise pattern matching, returning full S3 paths.
-    
+
     Args:
         path (str): Full S3 path (s3://bucket-name/prefix/) or just bucket name
         pattern (str, optional): Filename pattern to match. Defaults to '*'.
         batch_size (int, optional): Minimum number of filtered objects to collect. Defaults to 1000.
-    
+
     Yields:
         list: A page of full S3 object paths matching the specified criteria
-    
+
     Raises:
         ValueError: If the path is invalid
     """
-   
+
     # Parse the S3 path
     if path.startswith('s3://'):
         # Remove 's3://' and split into bucket and prefix
@@ -110,52 +108,52 @@ def list_s3_objects(path, pattern='*', batch_size=5000):
         # If no 's3://' assume it's just the bucket name
         bucket_name = path
         prefix = ''
-    
+
     # URL decode the bucket name and prefix to handle special characters
     bucket_name = urllib.parse.unquote(bucket_name)
     prefix = urllib.parse.unquote(prefix)
-    
+
     # Ensure prefix ends with a '/' if it's not empty
     if prefix and not prefix.endswith('/'):
         prefix += '/'
-    
+
     s3 = boto3.client('s3', config=Config(signature_version=UNSIGNED))
-    
+
     # Use regex for more precise filename matching
     filename_pattern = re.compile(fnmatch.translate(pattern) + '$')
-    
+
     # Keep track of continuation token
     continuation_token = None
     collected_results = []
     total_collected = 0  # Track total collected items
-    
+
     while True:
         # Prepare pagination arguments
         list_kwargs = {
             'Bucket': bucket_name,
             'Prefix': prefix,
         }
-        
+
         if continuation_token:
             list_kwargs['ContinuationToken'] = continuation_token
-        
+
         response = s3.list_objects_v2(**list_kwargs)
-        
+
         if 'Contents' in response:
             # Filter objects based on precise filename matching and .nc file extension
             filtered_page = [
-                f's3://{bucket_name}/{obj["Key"]}' for obj in response['Contents'] 
+                f's3://{bucket_name}/{obj["Key"]}' for obj in response['Contents']
                 if filename_pattern.match(obj['Key'].split('/')[-1]) and obj['Key'].endswith('.nc')
             ]
 
             # filtered_page = [
-            #     obj for obj in response['Contents'] 
+            #     obj for obj in response['Contents']
             #     if filename_pattern.match(obj['Key'].split('/')[-1]) and obj['Key'].endswith('.nc')
             # ]
-            # 
+            #
             collected_results.extend(filtered_page)
             total_collected += len(filtered_page)
-            
+
             while len(collected_results) >= batch_size:
                 yield collected_results[:batch_size]
                 collected_results = collected_results[batch_size:]
@@ -163,39 +161,39 @@ def list_s3_objects(path, pattern='*', batch_size=5000):
         if not response.get('IsTruncated', False):
             break
         continuation_token = response.get('NextContinuationToken')
-    
+
     if collected_results:
         yield collected_results
 
-    
+
 def split_s3_path(full_path):
     """
     Splits ITS_LIVE S3 path into (base_path, relative_path_with_slash)
-    
+
     Args:
         full_url: e.g. "s3://its-live-data/velocity_image_pair/010W/a/b/c/"
-    
+
     Returns:
         tuple: (base_path, relative_path)
         e.g. ("s3://its-live-data/velocity_image_pair/", "010W/a/b/c/")
     """
     parsed = urlparse(full_path)
     path_parts = parsed.path.strip('/').split('/')
-    
+
     # Base is always the first two parts (bucket + velocity_image_pair)
     base = f"{parsed.scheme}://{parsed.netloc}/{path_parts[0]}/"
-    
+
     # Relative path is everything after, preserving trailing slash
     rel_path = '/'.join(path_parts[1:]) + '/' if len(path_parts) > 1 else ""
-    
-    return base, rel_path    
- 
+
+    return base, rel_path
+
 def s3_path_to_local_path(s3_path, cache_root="/tmp/duck_cache"):
     """Convert s3://bucket/prefix/file.parquet to /tmp/duck_cache/bucket/prefix/file.parquet"""
     parsed = urlparse(s3_path)
     bucket = parsed.netloc
     prefix_and_file = parsed.path.lstrip('/')  # Remove leading slash
-    
+
     local_path = os.path.join(cache_root, bucket, prefix_and_file.replace("**/*.parquet", ""))
     return local_path
 
@@ -205,7 +203,7 @@ def cache_parquet_file(s3_paths: List[str], cache_root: str = "/tmp/duck_cache")
     for s3_path in s3_paths:
         local_path = s3_path_to_local_path(s3_path, cache_root=cache_root)
         matching_files = s3_fs.glob(s3_path)
-        
+
         # Download file if not already cached
         if not os.path.exists(local_path):
             os.makedirs(os.path.dirname(local_path), exist_ok=True)
@@ -213,7 +211,7 @@ def cache_parquet_file(s3_paths: List[str], cache_root: str = "/tmp/duck_cache")
             s3_fs.get(matching_files, local_path)
         else:
             logger.debug(f"Using cached {local_path}")
-        
+
         local_paths.append(local_path+"**/*.parquet")
     return local_paths
 
@@ -222,12 +220,12 @@ def extract_years_from_datetime_str(datetime_str):
     if '/' not in datetime_str:
         # Single datetime, extract year
         return [datetime_str.split('-')[0]]
-    
+
     # Range format, extract years from both ends
     start_dt, end_dt = datetime_str.split('/')
     start_year = start_dt.split('-')[0]
     end_year = end_dt.split('-')[0]
-    
+
     # Generate all years in range
     return [str(year) for year in range(int(start_year[0:4]), int(end_year[0:4]) + 1)]
 
@@ -272,7 +270,7 @@ def get_overlapping_grid_names(geojson_geometry: dict = {},
     List[str]
         A list of valid S3-style path prefixes (with wildcards) that point to `.parquet` files
         under spatial partitions overlapping the input geometry.
-    
+
     """
     if date_range != "all":
         year_ranges = extract_years_from_datetime_str(date_range)
@@ -280,7 +278,7 @@ def get_overlapping_grid_names(geojson_geometry: dict = {},
         year_ranges = None
 
     logger.debug(f"Extracted year ranges: {year_ranges}")
-    
+
     if partition_type == "latlon":
         # ITS_LIVE uses a fixed 10 by 10 grid  (centroid as name for the cell e.g. N60W040)
         def lat_prefix(lat):
@@ -288,21 +286,21 @@ def get_overlapping_grid_names(geojson_geometry: dict = {},
 
         def lon_prefix(lon):
             return f"E{abs(lon):03d}" if lon >= 0 else f"W{abs(lon):03d}"
-            
+
         geom = shape(geojson_geometry)
         missions = ["landsatOLI", "sentinel1", "sentinel2"]
-        
+
         if not geom.is_valid:
             geom = geom.buffer(0)
-    
+
         minx, miny, maxx, maxy = geom.bounds
-    
-        # Center-based grid! 
+
+        # Center-based grid!
         lon_center_start = int(math.floor((minx - 5) / 10.0)) * 10
         lon_center_end   = int(math.ceil((maxx + 5) / 10.0)) * 10
         lat_center_start = int(math.floor((miny - 5) / 10.0)) * 10
         lat_center_end   = int(math.ceil((maxy + 5) / 10.0)) * 10
-        
+
         grids = set()
         for lon_c in range(lon_center_start, lon_center_end + 1, 10):
             for lat_c in range(lat_center_start, lat_center_end + 1, 10):
@@ -310,9 +308,9 @@ def get_overlapping_grid_names(geojson_geometry: dict = {},
                 if geom.intersects(tile):
                     name = f"{lat_prefix(lat_c)}{lon_prefix(lon_c)}"
                     grids.add(name)
-                    
+
         prefixes = [f"{base_href}/{p}/{i}" for p in missions for i in list(grids)]
-        search_prefixes = [f"{path}/**/*.parquet" for path in prefixes if path_exists(path)]       
+        search_prefixes = [f"{path}/**/*.parquet" for path in prefixes if path_exists(path)]
         return search_prefixes
     elif partition_type=="h3":
         grids_hex = h3.h3shape_to_cells_experimental(h3.geo_to_h3shape(geojson_geometry), resolution, overlap)
@@ -331,7 +329,7 @@ def expr_to_sql(expr):
     """
     op = expr["op"]
     left, right = expr["args"]
-    
+
     # Get property name if dict with "property" key, else literal
     def val_to_sql(val):
         if isinstance(val, dict) and "property" in val:
@@ -366,7 +364,7 @@ def filters_to_where(filters):
     # filters is a list of expressions combined with AND
     sql_parts = [expr_to_sql(f) for f in filters if f and f != {}]
     return " AND ".join(sql_parts)
-    
+
 def path_exists(path: str) -> bool:
     if path.startswith("s3://"):
         return s3_fs.exists(path)
@@ -388,7 +386,7 @@ def serverless_search(base_catalog_href: str = "s3://its-live-data/test-space/st
                       reduce_spatial_search=True,
                       partition_type: str = "latlon",
                       resolution: int = 2,
-                      overlap: str = "overlap", 
+                      overlap: str = "overlap",
                       asset_type: str = ".nc"):
     """
     Performs a serverless!! search over partitioned STAC catalogs stored in Parquet format for the ITS_LIVE project.
@@ -473,7 +471,7 @@ def serverless_search(base_catalog_href: str = "s3://its-live-data/test-space/st
                     elif start_date:
                         date_filter_sql = f"AND datetime >= TIMESTAMP '{start_date}'"
                     elif end_date:
-                        date_filter_sql = f"AND datetime <= TIMESTAMP '{end_date}'"                
+                        date_filter_sql = f"AND datetime <= TIMESTAMP '{end_date}'"
                 query = f"""
                     SELECT 
                         assets -> 'data' ->> 'href' AS data_href
@@ -503,7 +501,5 @@ def serverless_search(base_catalog_href: str = "s3://its-live-data/test-space/st
             logger.info(f"Prefx: {prefix} | matching items: {len(items)}")
         except Exception as e:
             logger.error(f"Error while searching in {prefix}: {e}")
-        
+
     return sorted(list(set(hrefs)))
-
-

@@ -11,20 +11,19 @@ import io
 import json
 import logging
 from pathlib import Path
+from typing import Any
 
 import fsspec
 import geojson
 import kerchunk.hdf
 import numpy as np
+import obstore as obs
 import pandas as pd
 import pystac
 import xarray as xr
+from obstore.store import S3Store
 from pyproj import CRS, Transformer
 from shapely.geometry import Polygon
-import obstore as obs
-from obstore.store import S3Store
-
-from typing import Any
 
 from .ingestitem import ingest_item
 
@@ -347,19 +346,19 @@ def open_netcdf(url: str="", with_kerchunk: bool = False) -> tuple:
 def s3_to_https_link(s3_path):
     """
     Convert an S3 URL to an HTTPS link for public access.
-    
+
     Args:
         s3_path (str): S3 URL in the format 's3://bucket/key'
-    
+
     Returns:
         str: HTTPS link to the S3 object
     """
     # Remove 's3://' prefix
     path_without_prefix = s3_path.replace('s3://', '')
-    
+
     # Split into bucket and key
     bucket, key = path_without_prefix.split('/', 1)
-    
+
     # Construct HTTPS link
     return f"https://{bucket}.s3.amazonaws.com/{key}"
 

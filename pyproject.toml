@@ -25,6 +25,40 @@ dependencies = [
     "hyp3lib>=4,<5",
     "s3fs>=2025.1.0",
     "boto3",
+    "botocore",
+    # cryoforge
+    "dask >= 2024.11",
+    "distributed >= 2024.11",
+    "duckdb",
+    "fsspec >=2022.11",
+    "geojson",
+    "h3",
+    "kerchunk >= 0.2.6",
+    "numpy",
+    "obstore",
+    "orjson",
+    "pandas",
+    "pyarrow",
+    "pyproj",
+    "pystac >= 1.12.0",
+    "pystac-client",
+    "rustac>=0.8.1",
+    "s3fs >=2022.11",
+    "shapely>=2.0.0",
+    "xarray >= 2024.11",
+    "psutil",
+    "requests",
+    "tqdm",
+    # TODO: Check if used
+    "arro3-core",
+    "earthaccess >= 0.14.0",
+    "fastparquet",
+    "h5netcdf >= 1.5.0",
+    "stac-geoparquet",
+    "tenacity",
+    "virtualizarr",
+    "xstac >= 0.1.0",
+    "zarr<=3.0.0a",
 ]
 dynamic = ["version"]
 
@@ -44,7 +78,7 @@ Documentation = "https://hyp3-docs.asf.alaska.edu"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 script_launch_mode = "subprocess"
-# FIXME: Cryoforge generated items don't pass STAC item validation
+# FIXME: Cryoforge generated items don"t pass STAC item validation
 norecursedirs = "tests/cryoforge"
 
 [tool.setuptools]

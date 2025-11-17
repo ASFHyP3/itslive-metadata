@@ -1,9 +1,9 @@
 """Ingest sample data during docker-compose"""
 
-import json
-from urllib.parse import urljoin
 import argparse
+import json
 import logging
+from urllib.parse import urljoin
 
 import requests
 

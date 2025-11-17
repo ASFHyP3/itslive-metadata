@@ -1,17 +1,20 @@
 import argparse
+import datetime
+import hashlib
+import json
 import logging
 import os
-import json
 import warnings
-import hashlib
-import datetime
-from pathlib import Path
 from collections import defaultdict
+from pathlib import Path
+
 import orjson
-from dask.distributed import Client, LocalCluster, progress
 import s3fs
+from dask.distributed import Client, LocalCluster, progress
+
 from .generate import generate_itslive_metadata
 from .tooling import list_s3_objects, trim_memory
+
 
 def generate_stac_metadata(url: str):
     try:
@@ -44,7 +47,7 @@ class RegionTracker:
         self.chunk_dir.mkdir(parents=True, exist_ok=True)
         # Track chunks written in the current batch.
         self.current_batch_chunks = set()
-        
+
         self.metadata = {
             "last_batch": -1,
             "last_update": None,
@@ -59,7 +62,7 @@ class RegionTracker:
     def _initialize_metadata(self):
         """Initialize metadata with sync checks and batch control"""
         self._load_existing_metadata()
-        
+
         # Perform S3 sync validation if enabled.
         if self.s3_prefix:
             self._validate_s3_sync()
@@ -106,7 +109,7 @@ class RegionTracker:
         """Validate and sync metadata with S3 chunks"""
         s3_chunks = defaultdict(list)
         chunk_prefix = f"{self.s3_prefix}/chunks/".replace("s3://", "")
-        
+
         try:
             for chunk_path in self.s3.glob(f"{chunk_prefix}*.ndjson"):
                 try:
@@ -128,7 +131,7 @@ class RegionTracker:
                 logging.warning(f"Metadata out of sync for {year}: "
                                 f"S3 chunks up to {max(chunks)}, metadata up to {max(meta_nums or [0])}")
                 needs_rebuild = True
-        
+
         if needs_rebuild or not self.metadata['chunks']:
             self._rebuild_metadata(s3_chunks)
 
@@ -141,7 +144,7 @@ class RegionTracker:
         logging.info("Rebuilding metadata from S3 chunks")
         self.metadata['chunks'].clear()
         self.metadata['counters'].clear()
-        
+
         for year, chunks in s3_chunks.items():
             max_chunk = max(chunks) if chunks else 0
             self.metadata['chunks'][year] = []
@@ -165,7 +168,7 @@ class RegionTracker:
                     "item_count": item_count
                 })
             self.metadata['counters'][year] = max_chunk + 1
-        
+
         self._save_metadata(sync_immediately=True)
 
     def compute_md5(self, file_path):
@@ -215,15 +218,15 @@ class RegionTracker:
             chunk_num = self.metadata['counters'][year]
             path = self.chunk_dir / f"{year}-chunk{chunk_num:04d}.ndjson"
             self.current_batch_chunks.add((year, chunk_num))
-            
+
             with open(path, 'ab') as f:
                 f.write(orjson.dumps(feature.to_dict()) + b"\n")
 
         if sync:
             self._upload_chunks()
-        
+
         self.update_chunk_info()
-        
+
         self.metadata["last_batch"] = batch_num
         self.metadata["total_files_processed"] += len(features)
         self._rotate_counters()
@@ -302,7 +305,7 @@ class RegionTracker:
                 logging.info(f"Skipping file {filename}: unable to parse year and chunk number")
                 continue
             year_files.setdefault(year, []).append((chunk_num, file))
-        
+
         for year, files in year_files.items():
             files.sort(key=lambda x: x[0])
             consolidated_file = self.chunk_dir / f"{year}.ndjson"
@@ -345,7 +348,7 @@ def generate_items(regions_path, workers=4, sync=False, batch_size=200, reingest
     region_tracker = RegionTracker(output_path, f"{s3_target}/{region_id}", s3_write)
     if sync:
         region_tracker.sync_remote_chunks_to_local()
-    
+
 
     if reingest:
         region_tracker.metadata = {
@@ -361,7 +364,7 @@ def generate_items(regions_path, workers=4, sync=False, batch_size=200, reingest
     client = Client(LocalCluster(n_workers=workers, threads_per_worker=2))
     last_batch = region_tracker.metadata["last_batch"]
     logging.info("Starting batch processing from batch %d", last_batch + 1)
-    
+
     for batch_num, batch in enumerate(list_s3_objects(current_region, pattern="*.nc", batch_size=batch_size)):
         if batch_num <= last_batch and not reingest:
             logging.info(f"Skipping batch {batch_num} (already processed)")
@@ -387,10 +390,10 @@ def generate_stac_catalog():
     parser.add_argument("-b", "--batch", type=int, default=200, help="Batch size")
     parser.add_argument("-s", "--sync", action="store_true", help="Sync to S3")
     parser.add_argument("-r", "--reingest", action="store_true", help="Reset progress and reingest all data")
-    
+
     args = parser.parse_args()
-    
-   
+
+
     generate_items(
         regions_path=args.path,
         workers=args.workers,
@@ -401,4 +404,3 @@ def generate_stac_catalog():
 
 if __name__ == "__main__":
     generate_stac_catalog()
-

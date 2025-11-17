@@ -1,14 +1,13 @@
 import argparse
+import json
+import logging
 import sys
+
 import xarray as xr
 from pyproj import Transformer
 from pystac_client import Client
-import json
-
-import logging
 
 from hyp3_itslive_metadata.cryoforge.tooling import serverless_search
-
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
