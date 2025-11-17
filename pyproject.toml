@@ -139,3 +139,4 @@ non_interactive = true
 pretty = true
 disable_error_code = ["import-untyped"]
 exclude = ["src/hyp3_itslive_metadata/cryoforge/*", "tests/cryoforge/*", "build/*", "_test/*"]
+follow_imports = "silent"
