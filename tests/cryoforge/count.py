@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
-import boto3
-import os
-import json
-import datetime
 import argparse
 import concurrent.futures
+import datetime
+import json
+import os
 import signal
 import sys
+
+import boto3
 from botocore import UNSIGNED
 from botocore.config import Config
+
 
 # Global flag for graceful shutdown
 shutdown_requested = False

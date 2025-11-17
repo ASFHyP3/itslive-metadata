@@ -122,6 +122,9 @@ suppress-dummy-args = true
 
 [tool.ruff.lint.extend-per-file-ignores]
 "tests/*" = ["D1", "ANN"]
+# FIXME: all of this
+"src/hyp3_itslive_metadata/cryoforge/*" = ["D", "ANN", "PTH", "F", "UP"]
+"tests/cryoforge/*" = ["D", "ANN", "PTH", "F", "UP"]
 
 # Please keep the following mypy options up-to-date with https://github.com/ASFHyP3/actions/#reusable-mypyyml
 [tool.mypy]

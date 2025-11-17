@@ -1,6 +1,7 @@
+import tempfile
 import unittest
 from pathlib import Path
-import tempfile
+
 import pystac
 
 # Assuming the function to generate STAC item is in a module named `stac_generator`

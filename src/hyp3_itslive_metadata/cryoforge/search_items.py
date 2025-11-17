@@ -9,6 +9,7 @@ from pystac_client import Client
 
 from hyp3_itslive_metadata.cryoforge.tooling import serverless_search
 
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 

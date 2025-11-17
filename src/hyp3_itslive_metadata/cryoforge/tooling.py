@@ -19,7 +19,8 @@ import rustac
 import s3fs
 from botocore import UNSIGNED
 from botocore.client import Config
-from shapely.geometry import shape, box
+from shapely.geometry import box, shape
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

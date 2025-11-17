@@ -27,6 +27,7 @@ from shapely.geometry import Polygon
 
 from .ingestitem import ingest_item
 
+
 # TODO: Hard-coded here for now, but we should add this to the granule metadata and parse it from there
 ITS_LIVE_DATA_VERSION = '002'
 
