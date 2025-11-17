@@ -44,6 +44,8 @@ Documentation = "https://hyp3-docs.asf.alaska.edu"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 script_launch_mode = "subprocess"
+# FIXME: Cryoforge generated items don't pass STAC item validation
+norecursedirs = "tests/cryoforge"
 
 [tool.setuptools]
 include-package-data = true
