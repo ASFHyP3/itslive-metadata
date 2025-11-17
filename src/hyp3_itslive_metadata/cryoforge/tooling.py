@@ -26,15 +26,14 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-
 # Connect to DuckDB
 con = duckdb.connect()
-con.execute("INSTALL spatial")
-con.execute("LOAD spatial")
+con.execute('INSTALL spatial')
+con.execute('LOAD spatial')
 con.execute("SET s3_region='us-west-2'")
 
 
-s3_fs= s3fs.S3FileSystem(anon=True, default_fill_cache=False, skip_instance_cache=True)
+s3_fs = s3fs.S3FileSystem(anon=True, default_fill_cache=False, skip_instance_cache=True)
 
 
 def trim_memory() -> int:
@@ -50,7 +49,7 @@ def trim_memory() -> int:
     # Attempt to release memory back to the system
     try:
         # Dask-specific memory management
-        dask.distributed.worker.logger.debug("Attempting memory trim")
+        dask.distributed.worker.logger.debug('Attempting memory trim')
 
         # Release worker local memory if using distributed
         dask.distributed.worker.memory_limit = None
@@ -67,12 +66,11 @@ def trim_memory() -> int:
     return collected
 
 
-
 def post_or_put(url: str, data: dict):
     """Post or put data to url."""
     r = requests.post(url, json=data)
     if r.status_code == 409:
-        new_url = url + f"/{data['id']}"
+        new_url = url + f'/{data["id"]}'
         # Exists, so update
         r = requests.put(new_url, json=data)
         # Unchanged may throw a 404
@@ -81,6 +79,7 @@ def post_or_put(url: str, data: dict):
     else:
         r.raise_for_status()
     return r.status_code
+
 
 def list_s3_objects(path, pattern='*', batch_size=5000):
     """
@@ -142,7 +141,8 @@ def list_s3_objects(path, pattern='*', batch_size=5000):
         if 'Contents' in response:
             # Filter objects based on precise filename matching and .nc file extension
             filtered_page = [
-                f's3://{bucket_name}/{obj["Key"]}' for obj in response['Contents']
+                f's3://{bucket_name}/{obj["Key"]}'
+                for obj in response['Contents']
                 if filename_pattern.match(obj['Key'].split('/')[-1]) and obj['Key'].endswith('.nc')
             ]
 
@@ -181,24 +181,25 @@ def split_s3_path(full_path):
     path_parts = parsed.path.strip('/').split('/')
 
     # Base is always the first two parts (bucket + velocity_image_pair)
-    base = f"{parsed.scheme}://{parsed.netloc}/{path_parts[0]}/"
+    base = f'{parsed.scheme}://{parsed.netloc}/{path_parts[0]}/'
 
     # Relative path is everything after, preserving trailing slash
-    rel_path = '/'.join(path_parts[1:]) + '/' if len(path_parts) > 1 else ""
+    rel_path = '/'.join(path_parts[1:]) + '/' if len(path_parts) > 1 else ''
 
     return base, rel_path
 
-def s3_path_to_local_path(s3_path, cache_root="/tmp/duck_cache"):
+
+def s3_path_to_local_path(s3_path, cache_root='/tmp/duck_cache'):
     """Convert s3://bucket/prefix/file.parquet to /tmp/duck_cache/bucket/prefix/file.parquet"""
     parsed = urlparse(s3_path)
     bucket = parsed.netloc
     prefix_and_file = parsed.path.lstrip('/')  # Remove leading slash
 
-    local_path = os.path.join(cache_root, bucket, prefix_and_file.replace("**/*.parquet", ""))
+    local_path = os.path.join(cache_root, bucket, prefix_and_file.replace('**/*.parquet', ''))
     return local_path
 
 
-def cache_parquet_file(s3_paths: List[str], cache_root: str = "/tmp/duck_cache") -> List[str]:
+def cache_parquet_file(s3_paths: List[str], cache_root: str = '/tmp/duck_cache') -> List[str]:
     local_paths = []
     for s3_path in s3_paths:
         local_path = s3_path_to_local_path(s3_path, cache_root=cache_root)
@@ -207,13 +208,14 @@ def cache_parquet_file(s3_paths: List[str], cache_root: str = "/tmp/duck_cache")
         # Download file if not already cached
         if not os.path.exists(local_path):
             os.makedirs(os.path.dirname(local_path), exist_ok=True)
-            logger.debug(f"Downloading {len(matching_files)} parquet files to: {local_path}")
+            logger.debug(f'Downloading {len(matching_files)} parquet files to: {local_path}')
             s3_fs.get(matching_files, local_path)
         else:
-            logger.debug(f"Using cached {local_path}")
+            logger.debug(f'Using cached {local_path}')
 
-        local_paths.append(local_path+"**/*.parquet")
+        local_paths.append(local_path + '**/*.parquet')
     return local_paths
+
 
 def extract_years_from_datetime_str(datetime_str):
     """Extract years from STAC datetime string like '1980-01-01T00:00:00Z/1981-12-31T23:59:59Z'"""
@@ -230,12 +232,14 @@ def extract_years_from_datetime_str(datetime_str):
     return [str(year) for year in range(int(start_year[0:4]), int(end_year[0:4]) + 1)]
 
 
-def get_overlapping_grid_names(geojson_geometry: dict = {},
-                               base_href: str = "s3://its-live-data/test-space/stac/geoparquet/latlon",
-                               partition_type: str = "latlon",
-                               date_range: str = "all",
-                               resolution: int = 2,
-                               overlap: str = "overlap"):
+def get_overlapping_grid_names(
+    geojson_geometry: dict = {},
+    base_href: str = 's3://its-live-data/test-space/stac/geoparquet/latlon',
+    partition_type: str = 'latlon',
+    date_range: str = 'all',
+    resolution: int = 2,
+    overlap: str = 'overlap',
+):
     """
     Generates a list of S3 path prefixes corresponding to spatial grid tiles that overlap
     with the provided GeoJSON geometry. These paths are intended for discovering Parquet files
@@ -272,23 +276,23 @@ def get_overlapping_grid_names(geojson_geometry: dict = {},
         under spatial partitions overlapping the input geometry.
 
     """
-    if date_range != "all":
+    if date_range != 'all':
         year_ranges = extract_years_from_datetime_str(date_range)
     else:
         year_ranges = None
 
-    logger.debug(f"Extracted year ranges: {year_ranges}")
+    logger.debug(f'Extracted year ranges: {year_ranges}')
 
-    if partition_type == "latlon":
+    if partition_type == 'latlon':
         # ITS_LIVE uses a fixed 10 by 10 grid  (centroid as name for the cell e.g. N60W040)
         def lat_prefix(lat):
-            return f"N{abs(lat):02d}" if lat >= 0 else f"S{abs(lat):02d}"
+            return f'N{abs(lat):02d}' if lat >= 0 else f'S{abs(lat):02d}'
 
         def lon_prefix(lon):
-            return f"E{abs(lon):03d}" if lon >= 0 else f"W{abs(lon):03d}"
+            return f'E{abs(lon):03d}' if lon >= 0 else f'W{abs(lon):03d}'
 
         geom = shape(geojson_geometry)
-        missions = ["landsatOLI", "sentinel1", "sentinel2"]
+        missions = ['landsatOLI', 'sentinel1', 'sentinel2']
 
         if not geom.is_valid:
             geom = geom.buffer(0)
@@ -297,43 +301,44 @@ def get_overlapping_grid_names(geojson_geometry: dict = {},
 
         # Center-based grid!
         lon_center_start = int(math.floor((minx - 5) / 10.0)) * 10
-        lon_center_end   = int(math.ceil((maxx + 5) / 10.0)) * 10
+        lon_center_end = int(math.ceil((maxx + 5) / 10.0)) * 10
         lat_center_start = int(math.floor((miny - 5) / 10.0)) * 10
-        lat_center_end   = int(math.ceil((maxy + 5) / 10.0)) * 10
+        lat_center_end = int(math.ceil((maxy + 5) / 10.0)) * 10
 
         grids = set()
         for lon_c in range(lon_center_start, lon_center_end + 1, 10):
             for lat_c in range(lat_center_start, lat_center_end + 1, 10):
                 tile = box(lon_c - 5, lat_c - 5, lon_c + 5, lat_c + 5)
                 if geom.intersects(tile):
-                    name = f"{lat_prefix(lat_c)}{lon_prefix(lon_c)}"
+                    name = f'{lat_prefix(lat_c)}{lon_prefix(lon_c)}'
                     grids.add(name)
 
-        prefixes = [f"{base_href}/{p}/{i}" for p in missions for i in list(grids)]
-        search_prefixes = [f"{path}/**/*.parquet" for path in prefixes if path_exists(path)]
+        prefixes = [f'{base_href}/{p}/{i}' for p in missions for i in list(grids)]
+        search_prefixes = [f'{path}/**/*.parquet' for path in prefixes if path_exists(path)]
         return search_prefixes
-    elif partition_type=="h3":
+    elif partition_type == 'h3':
         grids_hex = h3.h3shape_to_cells_experimental(h3.geo_to_h3shape(geojson_geometry), resolution, overlap)
-        logger.debug(f"Found {len(grids_hex)} H3 grids for geometry: {geojson_geometry}")
+        logger.debug(f'Found {len(grids_hex)} H3 grids for geometry: {geojson_geometry}')
         grids = [int(hs, 16) for hs in grids_hex]
-        prefixes = [f"{base_href}/{p}" for p in grids]
+        prefixes = [f'{base_href}/{p}' for p in grids]
         # TODO: implement year filtering
-        search_prefixes = [f"{prefix}/**/*.parquet" for prefix in prefixes if path_exists(prefix)]
+        search_prefixes = [f'{prefix}/**/*.parquet' for prefix in prefixes if path_exists(prefix)]
         return search_prefixes
     else:
-        raise NotImplementedError(f"Partition {partition_type} not implemented.")
+        raise NotImplementedError(f'Partition {partition_type} not implemented.')
+
 
 def expr_to_sql(expr):
     """
     Transform a cql expression into SQL, I wonder if the library does it.
     """
-    op = expr["op"]
-    left, right = expr["args"]
+    op = expr['op']
+    left, right = expr['args']
 
     # Get property name if dict with "property" key, else literal
     def val_to_sql(val):
-        if isinstance(val, dict) and "property" in val:
-            prop = val["property"]
+        if isinstance(val, dict) and 'property' in val:
+            prop = val['property']
             if not prop.isidentifier():
                 return f'"{prop}"'
             return prop
@@ -347,47 +352,42 @@ def expr_to_sql(expr):
     right_sql = val_to_sql(right)
 
     # Map operators
-    op_map = {
-        "=": "=",
-        "==": "=",
-        ">=": ">=",
-        "<=": "<=",
-        ">": ">",
-        "<": "<",
-        "!=": "<>",
-        "<>": "<>"
-    }
+    op_map = {'=': '=', '==': '=', '>=': '>=', '<=': '<=', '>': '>', '<': '<', '!=': '<>', '<>': '<>'}
     sql_op = op_map.get(op, op)
-    return f"{left_sql} {sql_op} {right_sql}"
+    return f'{left_sql} {sql_op} {right_sql}'
+
 
 def filters_to_where(filters):
     # filters is a list of expressions combined with AND
     sql_parts = [expr_to_sql(f) for f in filters if f and f != {}]
-    return " AND ".join(sql_parts)
+    return ' AND '.join(sql_parts)
+
 
 def path_exists(path: str) -> bool:
-    if path.startswith("s3://"):
+    if path.startswith('s3://'):
         return s3_fs.exists(path)
     else:
         return os.path.exists(path)
+
 
 def build_cql2_filter(filters_list):
     valid_filters = [f for f in filters_list if f and f != {}]
     if not valid_filters:
         return None
-    return filters_list[0] if len(filters_list) == 1 else {"op": "and", "args": filters_list}
+    return filters_list[0] if len(filters_list) == 1 else {'op': 'and', 'args': filters_list}
 
 
-
-def serverless_search(base_catalog_href: str = "s3://its-live-data/test-space/stac/geoparquet/latlon",
-                      search_kwargs: dict = {},
-                      engine: str = "rustac",
-                      cache: bool = True,
-                      reduce_spatial_search=True,
-                      partition_type: str = "latlon",
-                      resolution: int = 2,
-                      overlap: str = "overlap",
-                      asset_type: str = ".nc"):
+def serverless_search(
+    base_catalog_href: str = 's3://its-live-data/test-space/stac/geoparquet/latlon',
+    search_kwargs: dict = {},
+    engine: str = 'rustac',
+    cache: bool = True,
+    reduce_spatial_search=True,
+    partition_type: str = 'latlon',
+    resolution: int = 2,
+    overlap: str = 'overlap',
+    asset_type: str = '.nc',
+):
     """
     Performs a serverless!! search over partitioned STAC catalogs stored in Parquet format for the ITS_LIVE project.
 
@@ -430,41 +430,44 @@ def serverless_search(base_catalog_href: str = "s3://its-live-data/test-space/st
     search_prefixes = []
 
     if reduce_spatial_search:
-        if "intersects" in search_kwargs:
-            search_prefixes = get_overlapping_grid_names(base_href=store,
-                                                         geojson_geometry=search_kwargs["intersects"],
-                                                         date_range=search_kwargs["datetime"] if "datetime" in search_kwargs else "all",
-                                                         partition_type=partition_type,
-                                                         resolution=resolution,
-                                                         overlap=overlap)
+        if 'intersects' in search_kwargs:
+            search_prefixes = get_overlapping_grid_names(
+                base_href=store,
+                geojson_geometry=search_kwargs['intersects'],
+                date_range=search_kwargs['datetime'] if 'datetime' in search_kwargs else 'all',
+                partition_type=partition_type,
+                resolution=resolution,
+                overlap=overlap,
+            )
     else:
-        if partition_type == "latlon":
-            search_prefixes = [f"{store}/{mission}/**/*.parquet" for mission in ["landsatOLI", "sentinel1", "sentinel2"]]
+        if partition_type == 'latlon':
+            search_prefixes = [
+                f'{store}/{mission}/**/*.parquet' for mission in ['landsatOLI', 'sentinel1', 'sentinel2']
+            ]
         else:
-            search_prefixes = [f"{store}/**/*.parquet"]
-
+            search_prefixes = [f'{store}/**/*.parquet']
 
     if cache:
         # Cache the parquet files locally
         search_prefixes = cache_parquet_file(search_prefixes)
 
-    filters = search_kwargs["filter"] if "filter" in search_kwargs else []
+    filters = search_kwargs['filter'] if 'filter' in search_kwargs else []
 
-    logger.debug(f"Searching in {search_prefixes} with filters: {filters} ")
+    logger.debug(f'Searching in {search_prefixes} with filters: {filters} ')
     hrefs = []
     # TODO: this could run in parallel on a thread or could be passed all to DuckDB/rustac as a combined list of paths.
     # for debugging purposes querying one by one is more convenient for now.
     for prefix in search_prefixes:
         try:
-            if engine == "duckdb":
+            if engine == 'duckdb':
                 # TODO: make it more flexible
                 filters_sql = filters_to_where(filters)
-                logger.debug(f"Filters as SQL: {filters_sql}")
-                geojson_str = json.dumps(search_kwargs["intersects"])
-                date_filter_sql = ""
-                if "datetime" in search_kwargs:
-                    date_range = search_kwargs["datetime"]
-                    start_date, end_date = date_range.split("/")
+                logger.debug(f'Filters as SQL: {filters_sql}')
+                geojson_str = json.dumps(search_kwargs['intersects'])
+                date_filter_sql = ''
+                if 'datetime' in search_kwargs:
+                    date_range = search_kwargs['datetime']
+                    start_date, end_date = date_range.split('/')
 
                     if start_date and end_date:
                         date_filter_sql = f"AND datetime BETWEEN TIMESTAMP '{start_date}' AND TIMESTAMP '{end_date}'"
@@ -483,23 +486,23 @@ def serverless_search(base_catalog_href: str = "s3://its-live-data/test-space/st
                     {date_filter_sql}
                     AND {filters_sql}
                 """
-                logger.debug(f"Running DuckDB query: {query}")
-                items = con.execute(query).df() # memory intensive?
-                links = items["data_href"].to_list()
+                logger.debug(f'Running DuckDB query: {query}')
+                items = con.execute(query).df()  # memory intensive?
+                links = items['data_href'].to_list()
                 hrefs.extend(links)
-            elif engine == "rustac":
+            elif engine == 'rustac':
                 # can we use include to only bring the asset links?
-                search_kwargs["filter"] = build_cql2_filter(filters)
+                search_kwargs['filter'] = build_cql2_filter(filters)
                 client = rustac.DuckdbClient()
                 items = client.search(prefix, **search_kwargs)
                 for item in items:
-                    for asset in item["assets"].values():
-                        if "data" in asset["roles"] and asset["href"].endswith(".nc"):
-                            hrefs.append(asset["href"])
+                    for asset in item['assets'].values():
+                        if 'data' in asset['roles'] and asset['href'].endswith('.nc'):
+                            hrefs.append(asset['href'])
             else:
-                raise NotImplementedError(f"Not a valid query engine: {engine}")
-            logger.info(f"Prefx: {prefix} | matching items: {len(items)}")
+                raise NotImplementedError(f'Not a valid query engine: {engine}')
+            logger.info(f'Prefx: {prefix} | matching items: {len(items)}')
         except Exception as e:
-            logger.error(f"Error while searching in {prefix}: {e}")
+            logger.error(f'Error while searching in {prefix}: {e}')
 
     return sorted(list(set(hrefs)))
