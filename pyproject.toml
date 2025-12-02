@@ -49,7 +49,7 @@ dependencies = [
     "psutil",
     "requests",
     "tqdm",
-    # TODO: Check if used
+    # TODO: Check if these are actually used
     "arro3-core",
     "earthaccess >= 0.14.0",
     "fastparquet",
@@ -69,7 +69,16 @@ develop = [
     "pytest",
     "pytest-console-scripts",
     "pytest-cov",
+    # FIXME: do we need any of these?
+    # "pytest-watch >=4.2",
+    # "python-magic >=0.4",
+    # "responses >=0.14",
+    # "jupyterlab >=3.0",
+    # "dask-labextension",
+    # "uv >=0.4.7",
 ]
+
+
 
 [project.scripts]
 metagen = "hyp3_itslive_metadata.cryoforge.generate:main"
