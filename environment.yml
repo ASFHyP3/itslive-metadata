@@ -9,11 +9,42 @@ dependencies:
   - pytest
   - pytest-console-scripts
   - pytest-cov
+  # cryoforge
+  - dask>=2024.11
+  - distributed>=2024.11
+  - duckdb
+  - fsspec>=2022.11
+  - geojson
+  - h3-py
+  - kerchunk>=0.2.6
+  - numpy
+  - obstore
+  - orjson
+  - pandas
+  - pyarrow
+  - pyproj
+  - pystac>=1.12.0
+  - pystac-client
+  - rustac>=0.8.1
+  - s3fs>=2022.11
+  - shapely>=2.0.0
+  - xarray>=2024.11
+  - psutil
+  - requests
+  - tqdm
+  # TODO: Check if used
+  - arro3-core
   - ciso8601
+  - earthaccess>=0.14.0
+  - fastparquet
+  - h5netcdf>=1.5.0
   - neovim
-  - zarr<=3.0.0a
+  - stac-geoparquet
+  - tenacity
   - unzip
-
+  - virtualizarr
+  - xstac>=0.1.0
+  - zarr<=3.0.0a
   # For running
   - boto3
   - hyp3lib>=4,<5
