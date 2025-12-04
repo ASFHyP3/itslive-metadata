@@ -12,6 +12,7 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 - `cryoforge` has been merged into this repository as `hyp3_itslive_metadata.cryoforge` instead of pulling it in as an external dependency.
   - the cryoforge `metagen`, `ingest`, `generate-gatalog`, `generate-from-parquet`, and `search-items` console script entrypoints have been added.
+- Support for Sentinel-1 C & D platforms which are now both launched.
 
 ## [0.5.0]
 
