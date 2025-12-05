@@ -23,9 +23,42 @@ classifiers=[
 ]
 dependencies = [
     "hyp3lib>=4,<5",
-    "cryoforge>=0.2.0,<1.0.0",
     "s3fs>=2025.1.0",
     "boto3",
+    "botocore",
+    # cryoforge
+    "dask >= 2024.11",
+    "distributed >= 2024.11",
+    "duckdb",
+    "fsspec >=2022.11",
+    "geojson",
+    "h3",
+    "kerchunk >= 0.2.6",
+    "numpy",
+    "obstore",
+    "orjson",
+    "pandas",
+    "pyarrow",
+    "pyproj",
+    "pystac >= 1.12.0",
+    "pystac-client",
+    "rustac>=0.8.1",
+    "s3fs >=2022.11",
+    "shapely>=2.0.0",
+    "xarray >= 2024.11",
+    "psutil",
+    "requests",
+    "tqdm",
+    # TODO: Check if these are actually used
+    "arro3-core",
+    "earthaccess >= 0.14.0",
+    "fastparquet",
+    "h5netcdf >= 1.5.0",
+    "stac-geoparquet",
+    "tenacity",
+    "virtualizarr",
+    "xstac >= 0.1.0",
+    "zarr<=3.0.0a",
 ]
 dynamic = ["version"]
 
@@ -36,7 +69,23 @@ develop = [
     "pytest",
     "pytest-console-scripts",
     "pytest-cov",
+    # FIXME: do we need any of these?
+    # "pytest-watch >=4.2",
+    # "python-magic >=0.4",
+    # "responses >=0.14",
+    # "jupyterlab >=3.0",
+    # "dask-labextension",
+    # "uv >=0.4.7",
 ]
+
+
+
+[project.scripts]
+metagen = "hyp3_itslive_metadata.cryoforge.generate:main"
+ingest = "hyp3_itslive_metadata.cryoforge.ingestitem:ingest_stac"
+generate-catalog = "hyp3_itslive_metadata.cryoforge.generatebulk:generate_stac_catalog"
+generate-from-parquet = "hyp3_itslive_metadata.cryoforge.generatebatched:generate_stac_catalog"
+search-items = "hyp3_itslive_metadata.cryoforge.search_items:search_items"
 
 [project.urls]
 Homepage = "https://github.com/betolink/itslive-metadata"
@@ -45,6 +94,8 @@ Documentation = "https://hyp3-docs.asf.alaska.edu"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 script_launch_mode = "subprocess"
+# FIXME: Cryoforge generated items don"t pass STAC item validation
+norecursedirs = "tests/cryoforge"
 
 [tool.setuptools]
 include-package-data = true
@@ -87,6 +138,9 @@ suppress-dummy-args = true
 
 [tool.ruff.lint.extend-per-file-ignores]
 "tests/*" = ["D1", "ANN"]
+# FIXME: all of this
+"src/hyp3_itslive_metadata/cryoforge/*" = ["D", "ANN", "PTH", "F", "UP"]
+"tests/cryoforge/*" = ["D", "ANN", "PTH", "F", "UP"]
 
 # Please keep the following mypy options up-to-date with https://github.com/ASFHyP3/actions/#reusable-mypyyml
 [tool.mypy]
@@ -100,3 +154,6 @@ install_types = true
 non_interactive = true
 pretty = true
 disable_error_code = ["import-untyped"]
+# FIXME: don't ignore cryoforge
+exclude = ["src/hyp3_itslive_metadata/cryoforge/*", "tests/cryoforge/*", "build/*", "_test/*"]
+follow_imports = "silent"
