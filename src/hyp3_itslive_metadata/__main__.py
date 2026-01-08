@@ -44,6 +44,11 @@ def _nullable_string(argument_string: str) -> str | None:
     return argument_string if argument_string else None
 
 
+def _nullable_int(argument_string: str) -> int | None:
+    argument_string = argument_string.replace('None', '').strip()
+    return int(argument_string) if argument_string else None
+
+
 def hyp3_meta() -> None:
     """HyP3 entrypoint for hyp3_itslive_metadata."""
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -103,8 +108,8 @@ def hyp3_bulk_meta() -> None:
         help='URI to a parquet file containing granule URIs to generate metadata for',
     )
 
-    parser.add_argument('--start-idx', type=int, default=0, help='Start index of the granules to generate metadata for.')
-    parser.add_argument('--stop-idx', type=int, default=None, help='Stop index of the granules to generate metadata for.')
+    parser.add_argument('--start-idx', type=_nullable_int, default=0, help='Start index of the granules to generate metadata for.')
+    parser.add_argument('--stop-idx', type=_nullable_int, default=None, help='Stop index of the granules to generate metadata for.')
 
     parser.add_argument(
         '--publish-bucket',
