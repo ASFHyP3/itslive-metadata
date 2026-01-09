@@ -7,6 +7,20 @@ and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
 and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.7.0]
+
+### Added
+- A `meta` and a `bulk_meta`entrypoint was added to the new `hyp3.plugin` entry-point groups.
+
+### Changed
+_ The HyP3 `__main__` package entrypoint now allows selecting either the `meta` (default) or `bulk_meta` hyp3 plugin entrypoint with the `++plugin` parameter
+- STAC item JSONs will be published to the same prefix in the `--publish-bucket` as the source granule and other metadata files.
+- `generate.save_metadata` will now return the path to the STAC, premet, spatial, and kerchunk files (optionally) written. Note: the kerchunk file path is always returned but the file may not exist if the references weren't generated.
+- `process.process_itslive_meta` will now return the path to the STAC, premet and spatial files created.
+
+### Removed
+- The now unused `--publish-prefix` argument to the HyP3 `meta` entrypoint has been removed.
+
 ## [0.6.0]
 
 ### Added
@@ -18,7 +32,6 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 - Upgraded to cryoforge v0.4.0, which now provides scene_1_frame and scene_2_frame stac item properties.
-- STAC item JSONs will be grouped by the same granule prefix within `--publish-bucket` and `--publish-prefix`.
 
 ## [0.4.0]
 

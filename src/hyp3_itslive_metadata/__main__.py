@@ -165,7 +165,7 @@ def main() -> None:
     """Main entrypoint for HyP3."""
     parser = argparse.ArgumentParser(prefix_chars='+', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument(
-        '++process',
+        '++plugin',
         choices=['meta', 'bulk_meta'],
         default='meta',
         help='Select the hyp3-plugin entrypoint to use',  # as specified in `pyproject.toml`
@@ -176,8 +176,8 @@ def main() -> None:
 
     discovered_plugins = entry_points(group='hyp3.plugins')
 
-    sys.argv = [args.process, *unknowns]
-    sys.exit(discovered_plugins[args.process].load()())
+    sys.argv = [args.plugin, *unknowns]
+    sys.exit(discovered_plugins[args.plugin].load()())
 
 
 if __name__ == '__main__':
