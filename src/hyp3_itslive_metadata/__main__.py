@@ -4,6 +4,7 @@ import argparse
 import json
 import logging
 import sys
+from collections.abc import Iterable
 from importlib.metadata import entry_points
 from pathlib import Path
 from urllib.parse import urlparse
@@ -20,7 +21,7 @@ tqdm.pandas()
 
 
 def _hyp3_upload_and_publish(
-    metadata_files: list[Path],
+    metadata_files: Iterable[Path],
     *,
     bucket: str | None = None,
     bucket_prefix: str = '',
