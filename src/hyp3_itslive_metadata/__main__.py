@@ -1,6 +1,7 @@
 """itslive-metadata processing for HyP3."""
 
 import argparse
+import json
 import logging
 import sys
 from importlib.metadata import entry_points
@@ -19,6 +20,7 @@ tqdm.pandas()
 
 def _hyp3_upload_and_publish(
         metadata_files: list[Path],
+        *,
         bucket: str | None = None,
         bucket_prefix: str = '',
         publish_bucket: str | None = None,
@@ -88,7 +90,7 @@ def hyp3_meta() -> None:
     metadata_files = process_itslive_metadata(args.granule_uri)
     publish_prefix = str(Path(urlparse(args.granule_uri).path).parent).lstrip('/')
     _hyp3_upload_and_publish(
-        metadata_files, args.publish_bucket, args.bucket_prefix, args.publish_bucket, publish_prefix
+        metadata_files, bucket=args.publish_bucket, bucket_prefix=args.bucket_prefix, publish_bucket=args.publish_bucket, publish_prefix=publish_prefix
     )
 
 
@@ -128,11 +130,24 @@ def hyp3_bulk_meta() -> None:
 
     df = pd.read_parquet(args.granules_parquet, engine='pyarrow')
 
+    stac_paths = []
     for granule_bucket, granule_key in tqdm(df.loc[args.start_idx:args.stop_idx, ['bucket', 'key']].itertuples(index=False), initial=args.start_idx):
         metadata_files = process_itslive_metadata(f's3://{granule_bucket}/{granule_key}')
+        stac_paths.append(metadata_files[0])
         _hyp3_upload_and_publish(
-            metadata_files, args.publish_bucket, args.bucket_prefix, args.publish_bucket, str(Path(granule_key).parent)
+            metadata_files, publish_bucket=args.publish_bucket, publish_prefix=str(Path(granule_key).parent)
         )
+
+    stac_ndjson = Path.cwd() / f'{Path(args.granule_parquet).stem}_{args.start_idx}-{args.stop_idx}.ndjson'
+    logging.info(f'Combining all {len(stac_paths)} STAC items into {stac_ndjson} for ingest')
+
+    stac_items = []
+    for stac_path in tqdm(stac_paths):
+        stac_items.append(json.dumps(json.loads(stac_path.read_text())))  # roundtrip to ensure no newlines
+
+    stac_ndjson.write_text('\n'.join(stac_items))
+    _hyp3_upload_and_publish([stac_ndjson], bucket=args.bucket, bucket_prefix=args.bucket_prefix)
+
 
 
 def main() -> None:
