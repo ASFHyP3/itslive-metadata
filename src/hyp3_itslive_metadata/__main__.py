@@ -18,13 +18,14 @@ from hyp3_itslive_metadata.process import process_itslive_metadata
 
 tqdm.pandas()
 
+
 def _hyp3_upload_and_publish(
-        metadata_files: list[Path],
-        *,
-        bucket: str | None = None,
-        bucket_prefix: str = '',
-        publish_bucket: str | None = None,
-        publish_prefix: str = ''
+    metadata_files: list[Path],
+    *,
+    bucket: str | None = None,
+    bucket_prefix: str = '',
+    publish_bucket: str | None = None,
+    publish_prefix: str = '',
 ) -> None:
     if bucket and bucket_prefix:
         logging.info(f'Uploading metadata files to s3://{bucket}/{bucket_prefix}/')
@@ -90,7 +91,11 @@ def hyp3_meta() -> None:
     metadata_files = process_itslive_metadata(args.granule_uri)
     publish_prefix = str(Path(urlparse(args.granule_uri).path).parent).lstrip('/')
     _hyp3_upload_and_publish(
-        metadata_files, bucket=args.publish_bucket, bucket_prefix=args.bucket_prefix, publish_bucket=args.publish_bucket, publish_prefix=publish_prefix
+        metadata_files,
+        bucket=args.publish_bucket,
+        bucket_prefix=args.bucket_prefix,
+        publish_bucket=args.publish_bucket,
+        publish_prefix=publish_prefix,
     )
 
 
@@ -110,8 +115,12 @@ def hyp3_bulk_meta() -> None:
         help='URI to a parquet file containing granule URIs to generate metadata for',
     )
 
-    parser.add_argument('--start-idx', type=_nullable_int, default=0, help='Start index of the granules to generate metadata for.')
-    parser.add_argument('--stop-idx', type=_nullable_int, default=None, help='Stop index of the granules to generate metadata for.')
+    parser.add_argument(
+        '--start-idx', type=_nullable_int, default=0, help='Start index of the granules to generate metadata for.'
+    )
+    parser.add_argument(
+        '--stop-idx', type=_nullable_int, default=None, help='Stop index of the granules to generate metadata for.'
+    )
 
     parser.add_argument(
         '--publish-bucket',
@@ -131,7 +140,9 @@ def hyp3_bulk_meta() -> None:
     df = pd.read_parquet(args.granules_parquet, engine='pyarrow')
 
     stac_paths = []
-    for granule_bucket, granule_key in tqdm(df.loc[args.start_idx:args.stop_idx, ['bucket', 'key']].itertuples(index=False), initial=args.start_idx):
+    for granule_bucket, granule_key in tqdm(
+        df.loc[args.start_idx : args.stop_idx, ['bucket', 'key']].itertuples(index=False), initial=args.start_idx
+    ):
         metadata_files = process_itslive_metadata(f's3://{granule_bucket}/{granule_key}')
         stac_paths.append(metadata_files[0])
         _hyp3_upload_and_publish(
@@ -147,7 +158,6 @@ def hyp3_bulk_meta() -> None:
 
     stac_ndjson.write_text('\n'.join(stac_items))
     _hyp3_upload_and_publish([stac_ndjson], bucket=args.bucket, bucket_prefix=args.bucket_prefix)
-
 
 
 def main() -> None:

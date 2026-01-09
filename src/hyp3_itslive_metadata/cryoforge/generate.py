@@ -513,7 +513,7 @@ def generate_itslive_metadata(url: str, store: Any = None, with_kerchunk: bool =
 def save_metadata(metadata: dict, outdir: str = '.') -> tuple[str, str, str, str]:
     """Save STAC item to filesystem or S3"""
     fs = fsspec.filesystem(outdir.split('://')[0] if '://' in outdir else 'file')
-    stac_id = metadata["stac"].id
+    stac_id = metadata['stac'].id
 
     if outdir.startswith('s3'):
         stac_s3_url = metadata['stac'].assets.get('data').extra_fields.get('alternate', [])['s3']['href']
