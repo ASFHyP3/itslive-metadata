@@ -11,10 +11,13 @@ from urllib.parse import urlparse
 
 import pandas as pd
 from hyp3lib.aws import upload_file_to_s3
+from hyp3lib.util import string_is_true
+from requests import HTTPError
 from tqdm.auto import tqdm
 
 from hyp3_itslive_metadata.aws import determine_granule_uri_from_bucket, upload_file_to_s3_with_publish_access_keys
 from hyp3_itslive_metadata.process import process_itslive_metadata
+from hyp3_itslive_metadata.stac import add_stac_item_to_catalog, update_stac_item_in_catalog
 
 
 tqdm.pandas()
@@ -37,10 +40,6 @@ def _hyp3_upload_and_publish(
         logging.info(f'Publishing metadata files to s3://{publish_bucket}/{publish_prefix}')
         for file in metadata_files:
             upload_file_to_s3_with_publish_access_keys(file, bucket=publish_bucket, prefix=publish_prefix)
-
-
-def _str_without_trailing_slash(s: str) -> str:
-    return s.rstrip('/')
 
 
 def _nullable_string(argument_string: str) -> str | None:
@@ -76,6 +75,21 @@ def hyp3_meta() -> None:
         'via the `PUBLISH_ACCESS_KEY_ID` and `PUBLISH_SECRET_ACCESS_KEY` environment variables.',
     )
 
+    parser.add_argument(
+        '--stac-items-endpoint',
+        type=_nullable_string,
+        default=None,
+        help=' URI to the STAC items endpoint for the STAC collection you want to add items to. Necessary credentials must be provided '
+        'via the `STAC_API_TOKEN` environment variable.',
+    )
+
+    parser.add_argument(
+        '--stac-exists-ok',
+        type=string_is_true,
+        default=False,
+        help='If a STAC item already exists in the collection specified by `--stac-items-endpoint`, update it instead of raising an HTTP 409 error when adding.',
+    )
+
     args = parser.parse_args()
 
     if args.granule_uri is None:
@@ -98,6 +112,18 @@ def hyp3_meta() -> None:
         publish_bucket=args.publish_bucket,
         publish_prefix=publish_prefix,
     )
+
+    if args.stac_items_endpoint:
+        item_json = json.loads(metadata_files[0].read_text())
+        logging.info(f'Adding {item_json["id"]} to {args.stac_items_endpoint}')
+        try:
+            add_stac_item_to_catalog(item_json, items_endpoint=args.stac_items_endpoint)
+        except HTTPError as e:
+            if e.response.status_code == 409 and args.stac_exists_ok:
+                logging.info(f'Exists! Updating {item_json["id"]} in {args.stac_items_endpoint}')
+                update_stac_item_in_catalog(item_json, items_endpoint=args.stac_items_endpoint)
+            else:
+                raise e
 
 
 def hyp3_bulk_meta() -> None:
