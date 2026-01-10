@@ -140,7 +140,7 @@ def hyp3_bulk_meta() -> None:
 
     df = pd.read_parquet(args.granules_parquet, engine='pyarrow')
 
-    stac_ndjson = Path.cwd() / f'{Path(args.granule_parquet).stem}_{args.start_idx}-{args.stop_idx}.ndjson'
+    stac_ndjson = Path.cwd() / f'{Path(args.granules_parquet).stem}_{args.start_idx}-{args.stop_idx}.ndjson'
     with open(stac_ndjson, 'w') as ndjson_file:
         for granule_bucket, granule_key in tqdm(
             df.loc[args.start_idx : args.stop_idx, ['bucket', 'key']].itertuples(index=False), initial=args.start_idx
