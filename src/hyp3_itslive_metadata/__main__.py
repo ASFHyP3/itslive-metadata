@@ -122,7 +122,7 @@ def hyp3_bulk_meta() -> None:
     parser.add_argument(
         '--stop-idx', type=_nullable_int, default=None, help='Stop index of the granules to generate metadata for.'
     )
-
+    parser.add_argument('--keep', action='store_true', help='Keep all generated metadata files on disk.')
     parser.add_argument(
         '--publish-bucket',
         type=_nullable_string,
@@ -140,24 +140,24 @@ def hyp3_bulk_meta() -> None:
 
     df = pd.read_parquet(args.granules_parquet, engine='pyarrow')
 
-    stac_paths = []
-    for granule_bucket, granule_key in tqdm(
-        df.loc[args.start_idx : args.stop_idx, ['bucket', 'key']].itertuples(index=False), initial=args.start_idx
-    ):
-        metadata_files = process_itslive_metadata(f's3://{granule_bucket}/{granule_key}')
-        stac_paths.append(metadata_files[0])
-        _hyp3_upload_and_publish(
-            metadata_files, publish_bucket=args.publish_bucket, publish_prefix=str(Path(granule_key).parent)
-        )
-
     stac_ndjson = Path.cwd() / f'{Path(args.granule_parquet).stem}_{args.start_idx}-{args.stop_idx}.ndjson'
-    logging.info(f'Combining all {len(stac_paths)} STAC items into {stac_ndjson} for ingest')
+    with open(stac_ndjson, 'w') as ndjson_file:
+        for granule_bucket, granule_key in tqdm(
+            df.loc[args.start_idx : args.stop_idx, ['bucket', 'key']].itertuples(index=False), initial=args.start_idx
+        ):
+            metadata_files = process_itslive_metadata(f's3://{granule_bucket}/{granule_key}')
 
-    stac_items = []
-    for stac_path in tqdm(stac_paths):
-        stac_items.append(json.dumps(json.loads(stac_path.read_text())))  # roundtrip to ensure no newlines
+            stac_line = json.dumps(json.loads(metadata_files[0].read_text()))
+            ndjson_file.write(stac_line + '\n')
 
-    stac_ndjson.write_text('\n'.join(stac_items))
+            _hyp3_upload_and_publish(
+                metadata_files, publish_bucket=args.publish_bucket, publish_prefix=str(Path(granule_key).parent)
+            )
+
+            if not args.keep:
+                for metadata_file in metadata_files:
+                    metadata_file.unlink()
+
     _hyp3_upload_and_publish([stac_ndjson], bucket=args.bucket, bucket_prefix=args.bucket_prefix)
 
 
