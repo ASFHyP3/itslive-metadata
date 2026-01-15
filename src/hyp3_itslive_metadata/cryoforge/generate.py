@@ -384,8 +384,8 @@ def create_stac_item(ds, geom, url):
         scene_1_frame = scene_1_split[2]
         scene_2_frame = scene_2_split[2]
     elif mission.startswith('S1'):
-        scene_1_frame = ds['img_pair_info'].frame_img1
-        scene_2_frame = ds['img_pair_info'].frame_img2
+        scene_1_frame = ds['img_pair_info'].attrs.get('frame_img1', 'N/A')
+        scene_2_frame = ds['img_pair_info'].attrs.get('frame_img2', 'N/A')
     elif mission.startswith('S2'):
         scene_1_frame = scene_1_split[5]
         scene_2_frame = scene_2_split[5]
