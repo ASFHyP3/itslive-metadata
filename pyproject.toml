@@ -78,14 +78,16 @@ develop = [
     # "uv >=0.4.7",
 ]
 
-
-
 [project.scripts]
 metagen = "hyp3_itslive_metadata.cryoforge.generate:main"
 ingest = "hyp3_itslive_metadata.cryoforge.ingestitem:ingest_stac"
 generate-catalog = "hyp3_itslive_metadata.cryoforge.generatebulk:generate_stac_catalog"
 generate-from-parquet = "hyp3_itslive_metadata.cryoforge.generatebatched:generate_stac_catalog"
 search-items = "hyp3_itslive_metadata.cryoforge.search_items:search_items"
+
+[project.entry-points."hyp3.plugins"]
+meta = "hyp3_itslive_metadata.__main__:hyp3_meta"
+bulk_meta = "hyp3_itslive_metadata.__main__:hyp3_bulk_meta"
 
 [project.urls]
 Homepage = "https://github.com/betolink/itslive-metadata"
@@ -94,7 +96,7 @@ Documentation = "https://hyp3-docs.asf.alaska.edu"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 script_launch_mode = "subprocess"
-# FIXME: Cryoforge generated items don"t pass STAC item validation
+# FIXME: Cryoforge generated items don't pass STAC item validation
 norecursedirs = "tests/cryoforge"
 
 [tool.setuptools]
