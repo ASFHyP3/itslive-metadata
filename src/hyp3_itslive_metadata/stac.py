@@ -1,8 +1,6 @@
 """Helper functions for working with STAC catalogs."""
 
-import json
 import os
-from pathlib import Path
 
 import requests
 
@@ -29,7 +27,7 @@ def _ensure_items_endpoint(items_endpoint: str) -> str:
     return items_endpoint
 
 
-def update_stac_item_in_catalog(stac_item: Path | dict, items_endpoint: str) -> requests.Response:
+def update_stac_item_in_catalog(stac_item: dict, items_endpoint: str) -> requests.Response:
     """Update STAC item already in a collection in a STAC catalog.
 
     Args:
@@ -42,9 +40,6 @@ def update_stac_item_in_catalog(stac_item: Path | dict, items_endpoint: str) -> 
     Raises:
         requests.exceptions.HTTPError, if an HTTP error occurs.
     """
-    if isinstance(stac_item, Path):
-        stac_item: dict = json.loads(stac_item.read_text())
-
     items_endpoint = _ensure_items_endpoint(items_endpoint)
     url = f'{items_endpoint}/{stac_item["id"]}'
     headers = _get_stac_api_auth_headers()
@@ -55,7 +50,7 @@ def update_stac_item_in_catalog(stac_item: Path | dict, items_endpoint: str) -> 
     return response
 
 
-def add_stac_item_to_catalog(stac_item: Path | dict, items_endpoint: str) -> requests.Response:
+def add_stac_item_to_catalog(stac_item: dict, items_endpoint: str) -> requests.Response:
     """Add STAC item to a collection in a STAC catalog.
 
     Args:
@@ -68,9 +63,6 @@ def add_stac_item_to_catalog(stac_item: Path | dict, items_endpoint: str) -> req
     Raises:
         requests.exceptions.HTTPError, if an HTTP error occurs.
     """
-    if isinstance(stac_item, Path):
-        stac_item: dict = json.loads(stac_item.read_text())
-
     items_endpoint = _ensure_items_endpoint(items_endpoint)
     headers = _get_stac_api_auth_headers()
 
