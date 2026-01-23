@@ -9,14 +9,16 @@ from hyp3_itslive_metadata.cryoforge import generate_itslive_metadata, save_meta
 log = logging.getLogger(__name__)
 
 
-def process_itslive_metadata(granule_uri: str) -> list[Path]:
+def process_itslive_metadata(granule_uri: str) -> tuple[Path, Path, Path]:
     """Generates ITS_LIVE granule metadata files from a source S3 bucket and prefix.
 
     Args:
         granule_uri: URI to the granule or folder (s3://<bucket>/<prefix>) for the granule.
 
     Outputs:
-        str: S3 path of the generated STAC item.
+        stac_item: local path to the generated STAC item.
+        premet: local path to the generated NSIDC premet file.
+        spatial: local path to the generated NSIDC spatial file.
     """
     log.info(f'Processing itslive metadata for granule: {granule_uri}')
     metadata = generate_itslive_metadata(
@@ -27,7 +29,6 @@ def process_itslive_metadata(granule_uri: str) -> list[Path]:
     # saves the stac item and the NSIDC spatial+premet metadata files
     output_path = Path('./output')
     output_path.mkdir(parents=True, exist_ok=True)
-    save_metadata(metadata, './output')
-    file_paths = [f for f in Path('./output').glob('*') if not f.name.endswith('.ref.json')]
+    stac_item, premet, spatial, _ = save_metadata(metadata, './output')
 
-    return file_paths
+    return Path(stac_item), Path(premet), Path(spatial)
