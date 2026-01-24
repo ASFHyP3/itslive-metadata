@@ -11,6 +11,9 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 - A `meta` and a `bulk_meta`entrypoint was added to the new `hyp3.plugin` entry-point groups.
+- A `--stac-items-endpoint` option was added to the `__main__.hyp3_meta` function and the `meta` entry point for HyP3 plugins which will add (POST) STAC items to the specified STAC catalog collection items endpoint. 
+- A `--stac-exists-ok` option was added to the `__main__.hyp3_meta` function and the `meta` entry point for HyP3 plugins which will update (PUT) existing STAC items in the specified STAC catalog collection instead of raising an HTTP 409 error when adding.
+- A `stac` helper module with methods to add (POST) items to and update (PUT) items in a stac catalog collection. 
 
 ### Changed
 _ The HyP3 `__main__` package entrypoint now allows selecting either the `meta` (default) or `bulk_meta` hyp3 plugin entrypoint with the `++plugin` parameter
