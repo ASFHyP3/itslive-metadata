@@ -79,7 +79,7 @@ def hyp3_meta() -> None:
         '--stac-items-endpoint',
         type=_nullable_string,
         default=None,
-        help=' URI to the STAC items endpoint for the STAC collection you want to add items to. Necessary credentials must be provided '
+        help='URI to the STAC items endpoint for the STAC collection you want to add items to. Necessary credentials must be provided '
         'via the `STAC_API_TOKEN` environment variable.',
     )
 
