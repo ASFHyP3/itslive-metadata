@@ -107,7 +107,7 @@ def hyp3_meta() -> None:
     publish_prefix = str(Path(urlparse(args.granule_uri).path).parent).lstrip('/')
     _hyp3_upload_and_publish(
         metadata_files,
-        bucket=args.publish_bucket,
+        bucket=args.bucket,
         bucket_prefix=args.bucket_prefix,
         publish_bucket=args.publish_bucket,
         publish_prefix=publish_prefix,
