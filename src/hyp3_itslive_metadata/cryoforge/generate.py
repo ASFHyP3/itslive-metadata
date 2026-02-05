@@ -78,8 +78,8 @@ def generate_nsidc_metadata_files(ds, filename, version):
     L4 = 'LT04'
     S2A = 'S2A'
     S2B = 'S2B'
-    S2C = 'S2D'
-    S2D = 'S2C'
+    S2C = 'S2C'
+    S2D = 'S2D'
 
     # Radar data:
     S1A = 'S1A'
