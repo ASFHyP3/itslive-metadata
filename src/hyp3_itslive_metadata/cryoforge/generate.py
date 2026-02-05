@@ -78,6 +78,8 @@ def generate_nsidc_metadata_files(ds, filename, version):
     L4 = 'LT04'
     S2A = 'S2A'
     S2B = 'S2B'
+    S2C = 'S2D'
+    S2D = 'S2C'
 
     # Radar data:
     S1A = 'S1A'
@@ -101,6 +103,8 @@ def generate_nsidc_metadata_files(ds, filename, version):
         S1D: PlatformSensor('SENTINEL-1', 'Sentinel-1D'),
         S2A: PlatformSensor('SENTINEL-2', 'Sentinel-2A'),
         S2B: PlatformSensor('SENTINEL-2', 'Sentinel-2B'),
+        S2C: PlatformSensor('SENTINEL-2', 'Sentinel-2C'),
+        S2D: PlatformSensor('SENTINEL-2', 'Sentinel-2D'),
     }
 
     def get_sensor_tokens_from_filename(filename: str):
