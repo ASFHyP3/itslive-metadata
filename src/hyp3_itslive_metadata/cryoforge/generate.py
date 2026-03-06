@@ -86,6 +86,7 @@ def generate_nsidc_metadata_files(ds, filename, version):
     S1B = 'S1B'
     S1C = 'S1C'
     S1D = 'S1D'
+    NISAR = 'NISAR'
 
     PlatformSensor = collections.namedtuple('PM', ['platform', 'sensor'])
 
@@ -105,6 +106,7 @@ def generate_nsidc_metadata_files(ds, filename, version):
         S2B: PlatformSensor('SENTINEL-2', 'Sentinel-2B'),
         S2C: PlatformSensor('SENTINEL-2', 'Sentinel-2C'),
         S2D: PlatformSensor('SENTINEL-2', 'Sentinel-2D'),
+        NISAR: PlatformSensor('NISAR', 'L-SAR'),
     }
 
     def get_sensor_tokens_from_filename(filename: str):
@@ -394,11 +396,9 @@ def create_stac_item(ds, geom, url):
         scene_1_frame = scene_1_split[5]
         scene_2_frame = scene_2_split[5]
     elif mission.startswith('N'):
-        # REL_FRM
-        # REL - Relative orbit track within cycle
-        # FRM - Frame number within orbit track
-        scene_1_frame = f'{scene_1_split[5]}_{scene_1_split[7]}'
-        scene_2_frame = f'{scene_2_split[5]}_{scene_2_split[7]}'
+        # REL_P_FRM -- relative orbit, pass (flight) direction, frame number
+        scene_1_frame = '_'.join(scene_1_split[5:8])
+        scene_2_frame = '_'.join(scene_1_split[5:8])
 
     date_created = (
         pd.to_datetime(ds.attrs.get('date_created', '')).tz_localize('UTC').isoformat().replace('+00:00', 'Z')
