@@ -7,6 +7,11 @@ and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
 and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.8.0]
+
+### Added
+- Support metadata generation for NISAR RSLC and GSLC products.
+
 ## [0.7.1]
 
 ### Added
